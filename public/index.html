@@ -1,6 +1,6 @@
-<html>
+<body>
 	
-	<textarea name="input" id="input" cols="30" rows="10"></textarea>
+	<textarea name="" id="input" cols="30" rows="10"></textarea>
 	
 
 	<div id="output"></div>
@@ -9,55 +9,43 @@
 	<script>
 	
 
-		const ws = new WebSocket(window.location.href + "term")
-
-		let output = document.getElementById("output")
-
-		ws.onopen = () => {
-			console.log("alright")
-		}
+		const ws = new WebSocket(window.location.href + "term");
+		
+		const output = document.getElementById("output")
 
 		ws.onmessage = (m) => {
-			const {type, msg} = JSON.parse(m.data)
-		
-				
-			let div = document.createElement("div");
 
+			const {type, msg} = JSON.parse(m.data);
+			console.log(msg)
+
+
+			let div = document.createElement("div")
 			div.innerHTML = msg;
 			div.classList.add(type)
 
-			output.appendChild(div)
-
-			output.appendChild(document.createElement("br"))
-		
+			output.appendChild(div);
+			output.appendChild(document.createElement("br"));
 		}
-
 		let input = document.getElementById("input");
 
-		input.addEventListener("keydown", (e) => {
-			console.log(e.key)	
-			if(e.key == "Enter"){
-				console.log(input.value)
-		
-				let div = document.createElement("div")	
-				div.innerHTML = "command: " + input.value;
 
-				output.appendChild(div)
+		input.addEventListener("keydown", (e) => {
+			if(e.key == "Enter"){
+
+				let div = document.createElement("div")
+				div.innerHTML =  `command: <strong style="color:blue">${input.value}</strong>`;
+				output.appendChild(div);
 
 				ws.send(input.value)
 				input.value = ""
 			}
-
 		})
 
+	</script>
 
-	</script>	
-	
 	<style>
-
 		.error{
-			color : red;	
+			color : red
 		}
-
 	</style>
-</html>
+</body>
