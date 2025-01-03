@@ -21,10 +21,9 @@
 
 			let div = document.createElement("div")
 			div.innerHTML = msg;
-			div.classList.add(type)
 
-			output.appendChild(div);
-			output.appendChild(document.createElement("br"));
+			output.innerHTML = div.outerHTML + "<br>" + output.innerHTML;
+
 		}
 		let input = document.getElementById("input");
 
@@ -34,7 +33,9 @@
 
 				let div = document.createElement("div")
 				div.innerHTML =  `command: <strong style="color:blue">${input.value}</strong>`;
-				output.appendChild(div);
+		
+
+				output.innerHTML = div.outerHTML + output.innerHTML;
 
 				ws.send(input.value)
 				input.value = ""
