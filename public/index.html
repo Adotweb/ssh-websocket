@@ -1,0 +1,63 @@
+<html>
+	
+	<textarea name="input" id="input" cols="30" rows="10"></textarea>
+	
+
+	<div id="output"></div>
+
+
+	<script>
+	
+
+		const ws = new WebSocket(window.location.href + "term")
+
+		let output = document.getElementById("output")
+
+		ws.onopen = () => {
+			console.log("alright")
+		}
+
+		ws.onmessage = (m) => {
+			const {type, msg} = JSON.parse(m.data)
+		
+				
+			let div = document.createElement("div");
+
+			div.innerHTML = msg;
+			div.classList.add(type)
+
+			output.appendChild(div)
+
+			output.appendChild(document.createElement("br"))
+		
+		}
+
+		let input = document.getElementById("input");
+
+		input.addEventListener("keydown", (e) => {
+			console.log(e.key)	
+			if(e.key == "Enter"){
+				console.log(input.value)
+		
+				let div = document.createElement("div")	
+				div.innerHTML = "command: " + input.value;
+
+				output.appendChild(div)
+
+				ws.send(input.value)
+				input.value = ""
+			}
+
+		})
+
+
+	</script>	
+	
+	<style>
+
+		.error{
+			color : red;	
+		}
+
+	</style>
+</html>
