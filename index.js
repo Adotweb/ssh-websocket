@@ -1,39 +1,52 @@
 const express = require("express");
-
 const app = express();
+const server = require("http").createServer(app);
+const { WebSocketServer } = require("ws");
+const os = require("os");
+const pty = require("node-pty");
 
-const server = require("http").createServer(app)
-const { WebSocketServer } = require("ws")
+const wss = new WebSocketServer({ server, path: "/term" });
 
-const wss = new WebSocketServer({server, path : "/term"})
+app.use(express.static(__dirname + "/public/"));
 
-const {exec} = require("child_process");
+wss.on("connection", (socket) => {
+    const shell = os.platform() === "win32" ? "powershell.exe" : "bash";
 
+    const ptyProcess = pty.spawn(shell, [], {
+        name: "xterm-color",
+        cols: 80,
+        rows: 24,
+        cwd: process.env.HOME,
+        env: process.env,
+    });
 
-app.use(express.static(__dirname + "/public/"))
+    let buffer = "";
 
+    // Collect and filter data
+    ptyProcess.onData((data) => {
+        buffer += data;
 
-wss.on("connection", socket => {
+        // Detect end of command output (common in bash)
+        if (buffer.includes("\r\n")) {
+            const filteredOutput = buffer
+                .split("\r\n")  // Break into lines
+                .filter(line => !line.includes("$") && !line.includes(">>>"))  // Remove prompt lines
+                .join("\n");
 
-	socket.on("message", (proto) => {
+            socket.send(JSON.stringify({ type: "out", msg: filteredOutput }));
+            buffer = "";  // Clear buffer after sending result
+        }
+    });
 
-		const input = proto.toString();
-	
+    socket.on("message", (proto) => {
+        const input = proto.toString();
+        ptyProcess.write(input + "\r");
+    });
 
-		exec(input, (err, stdout, stderr) => {
-			
-			if(err){
-				socket.send(JSON.stringify({type : "error", msg : err.message}))
-				return
-			}if(stderr){
-				socket.send(JSON.stringify({type : "error", msg : stderr}))
-				return
-			}
-			socket.send(JSON.stringify({type : "out", msg : stdout}))
-		})
+    socket.on("close", () => {
+        ptyProcess.kill();
+    });
+});
 
-	})
+server.listen(3000);
 
-})
-
-server.listen(3000)
